@@ -1,5 +1,4 @@
 import re
-from string import punctuation
 from typing import NamedTuple
 
 
@@ -18,7 +17,8 @@ FORBIDDEN_LOGINS = {"admin", "root", "administrator", "test", "user", "guest", "
 PHONE = re.compile(r"\+\d-\d{3}-\d{3}-\d{4}")
 EMAIL = re.compile(r"[^@\s]+@[^@\s]+\.[a-zA-Z]{2,}")
 PLAIN_LOGIN = re.compile(r"[A-Za-z0-9_]{5,}")
-PASSWORD = re.compile(rf"[А-ЯЁа-яё\d{re.escape(punctuation)}]{{7,}}")
+SPECIAL = r"""!@#$%^&*()_+-=[]{};:'",.<>/?\|`~"""
+PASSWORD = re.compile(rf"[А-ЯЁа-яё\d{re.escape(SPECIAL)}]{{7,}}")
 
 
 def login_error(login):
@@ -46,7 +46,7 @@ def password_error(password, confirmation):
         return "Нужна строчная буква"
     if not re.search(r"\d", password):
         return "Нужна цифра"
-    if not any(char in punctuation for char in password):
+    if not any(char in SPECIAL for char in password):
         return "Нужен спецсимвол"
     if password != confirmation:
         return "Пароль и подтверждение не совпадают"
