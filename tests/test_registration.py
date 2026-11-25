@@ -16,29 +16,29 @@ class RegistrationTests(unittest.TestCase):
         connection = sqlite3.connect(":memory:")
         self.addCleanup(connection.close)
         self.db = RegistrationDatabase(connection)
-        self.mock_user = Mock()
-        self.mock_sender = Mock()
-        self.mock_user.read.return_value = VALID
-        self.controller = Controller(self.mock_user, self.db, RegistrationValidator(), self.mock_sender)
+        self.user = Mock()
+        self.sender = Mock()
+        self.user.read.return_value = VALID
+        self.controller = Controller(self.user, self.db, RegistrationValidator(), self.sender)
 
     def test_new_registration(self):
         message = self.controller.run()
 
         self.assertEqual(message, "Регистрация успешна")
         self.assertEqual(self.db.get(VALID), (True, ""))
-        self.mock_sender.send.assert_called_once_with(message)
+        self.sender.send.assert_called_once_with(message)
 
     def test_saved_result(self):
         self.db.add(VALID, (False, "Сохранённый отказ"))
         message = self.controller.run()
 
         self.assertEqual(message, "Сохранённый отказ")
-        self.mock_sender.send.assert_called_once_with(message)
+        self.sender.send.assert_called_once_with(message)
 
     def test_different_confirmation(self):
         self.controller.run()
         data = ("student_3", PASSWORD, "Другой пароль")
-        self.mock_user.read.return_value = data
+        self.user.read.return_value = data
         message = self.controller.run()
 
         self.assertEqual(message, "Пароль и подтверждение не совпадают")
@@ -66,7 +66,7 @@ class RegistrationTests(unittest.TestCase):
         ]
         for login, password, error in cases:
             data = (login, password, password)
-            self.mock_user.read.return_value = data
+            self.user.read.return_value = data
             self.assertEqual(self.controller.run(), error)
             self.assertEqual(self.db.get(data), (False, error))
-            self.mock_sender.send.assert_called_with(error)
+            self.sender.send.assert_called_with(error)
