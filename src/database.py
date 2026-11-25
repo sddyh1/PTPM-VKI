@@ -16,26 +16,29 @@ class RegistrationDatabase:
         """)
 
     def get(self, data):
+        
         row = self.connection.execute("""
             SELECT success, error FROM registrations
             WHERE login = ? AND password = ? AND confirmation = ?
         """, data).fetchone()
+
         if row is None:
             return None
+        
         success, error = row
         return bool(success), error
 
     def add(self, data, result) -> None:
-        with self.connection:
-            self.connection.execute("""
-                INSERT INTO registrations (login, password, confirmation, success, error)
-                VALUES (?, ?, ?, ?, ?)
-                ON CONFLICT (login, password, confirmation) DO NOTHING
-            """, data + result)
+        self.connection.execute("""
+            INSERT INTO registrations (login, password, confirmation, success, error)
+            VALUES (?, ?, ?, ?, ?)
+            ON CONFLICT (login, password, confirmation) DO NOTHING
+        """, data + result)
+        self.connection.commit()
 
     def delete(self, data) -> None:
-        with self.connection:
-            self.connection.execute("""
-                DELETE FROM registrations
-                WHERE login = ? AND password = ? AND confirmation = ?
-            """, data)
+        self.connection.execute("""
+            DELETE FROM registrations
+            WHERE login = ? AND password = ? AND confirmation = ?
+        """, data)
+        self.connection.commit()
