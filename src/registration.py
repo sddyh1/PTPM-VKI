@@ -49,7 +49,7 @@ def password_error(password, confirmation):
 
 
 class RegistrationValidator:
-    def register(self, data: Credentials) -> tuple[bool, str]:
+    def register(self, data: Credentials):
         error = login_error(data.login)
         if error != "":
             return False, error

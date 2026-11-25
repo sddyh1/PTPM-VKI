@@ -17,7 +17,7 @@ class RegistrationDatabase:
             )
         """)
 
-    def get(self, data: Credentials) -> tuple[bool, str] | None:
+    def get(self, data: Credentials):
         row = self.connection.execute("""
             SELECT success, error FROM registrations
             WHERE login = ? AND password = ? AND confirmation = ?
@@ -27,7 +27,7 @@ class RegistrationDatabase:
         success, error = row
         return bool(success), error
 
-    def add(self, data: Credentials, result: tuple[bool, str]) -> None:
+    def add(self, data: Credentials, result) -> None:
         with self.connection:
             self.connection.execute("""
                 INSERT INTO registrations (login, password, confirmation, success, error)
