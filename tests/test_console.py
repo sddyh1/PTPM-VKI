@@ -4,7 +4,6 @@ from sqlite3 import connect
 from unittest.mock import patch
 
 from src.adapters import ConsoleInput, SimulatedServer
-from src.database import RegistrationDatabase
 
 
 class ConsoleTests(unittest.TestCase):
@@ -28,11 +27,8 @@ class ConsoleTests(unittest.TestCase):
     @patch("builtins.input")
     @patch("builtins.print")
     def test_program_start(self, output, keyboard, open_database):
-        data = ("student@example.org", "Учебный7!", "Учебный7!")
-        keyboard.side_effect = data
-        connection = connect("test_registration.sqlite3")
-        self.addCleanup(connection.close)
-        RegistrationDatabase(connection).delete(data)
-        open_database.return_value = connection
+        keyboard.side_effect = ["student@example.org", "Учебный7!", "Учебный7!"]
+        open_database.return_value = connect(":memory:")
+        self.addCleanup(open_database.return_value.close)
         runpy.run_module("main", run_name="__main__")
         output.assert_called_once_with("[Имитация сервера] Регистрация успешна")

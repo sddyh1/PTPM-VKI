@@ -13,10 +13,9 @@ VALID = ("student_3", PASSWORD, PASSWORD)
 
 class RegistrationTests(unittest.TestCase):
     def setUp(self):
-        connection = sqlite3.connect("test_registration.sqlite3")
+        connection = sqlite3.connect(":memory:")
         self.addCleanup(connection.close)
         self.db = RegistrationDatabase(connection)
-        self.db.delete(VALID)
         self.user = Mock()
         self.sender = Mock()
         self.user.read.return_value = VALID
@@ -39,7 +38,6 @@ class RegistrationTests(unittest.TestCase):
     def test_different_confirmation(self):
         self.controller.run()
         data = ("student_3", PASSWORD, "Другой пароль")
-        self.db.delete(data)
         self.user.read.return_value = data
         message = self.controller.run()
 
@@ -68,7 +66,6 @@ class RegistrationTests(unittest.TestCase):
         ]
         for login, password, error in cases:
             data = (login, password, password)
-            self.db.delete(data)
             self.user.read.return_value = data
             self.assertEqual(self.controller.run(), error)
             self.assertEqual(self.db.get(data), (False, error))
