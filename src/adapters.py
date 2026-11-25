@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from getpass import getpass
 
 from src.registration import Credentials
 
@@ -13,8 +12,8 @@ class UserInput(ABC):
 class ConsoleInput(UserInput):
     def read(self) -> Credentials:
         login = input("Логин: ")
-        password = getpass("Пароль: ")
-        confirmation = getpass("Подтверждение: ")
+        password = input("Пароль: ")
+        confirmation = input("Подтверждение: ")
         return Credentials(login, password, confirmation)
 
 

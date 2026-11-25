@@ -13,10 +13,7 @@ from src.registration import Credentials, Result
 
 class ConsoleTests(unittest.TestCase):
     def test_input_reads_password_and_confirmation_separately(self):
-        with (
-            patch("builtins.input", return_value="student_3"),
-            patch("src.adapters.getpass", side_effect=["первый", "второй"]),
-        ):
+        with patch("builtins.input", side_effect=["student_3", "первый", "второй"]):
             data = ConsoleInput().read()
         self.assertEqual(data, Credentials("student_3", "первый", "второй"))
 
@@ -39,8 +36,7 @@ class ConsoleTests(unittest.TestCase):
             connection = sqlite3.connect(path)
             with (
                 patch("sqlite3.connect", return_value=connection),
-                patch("builtins.input", return_value=data.login),
-                patch("src.adapters.getpass", side_effect=[password, password]),
+                patch("builtins.input", side_effect=[data.login, password, password]),
                 patch("builtins.print") as output,
             ):
                 runpy.run_module("main", run_name="__main__")
