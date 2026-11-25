@@ -37,11 +37,8 @@ class RegistrationDatabase:
         self.connection.commit()
 
     def delete(self, data) -> None:
-        login, password, confirmation = data
         self.connection.execute("""
             DELETE FROM registrations
-            WHERE login = ?
-              AND password = ?
-              AND confirmation = ?
-        """, (login, password, confirmation))
+            WHERE login = ? AND password = ? AND confirmation = ?
+        """, data)
         self.connection.commit()
