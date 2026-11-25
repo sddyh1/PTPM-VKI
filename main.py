@@ -1,5 +1,4 @@
 import sqlite3
-from contextlib import closing
 
 from src.adapters import ConsoleInput, SimulatedServer
 from src.controller import Controller
@@ -8,10 +7,13 @@ from src.registration import RegistrationValidator
 
 
 def main():
-    with closing(sqlite3.connect("registration.sqlite3")) as connection:
-        database = RegistrationDatabase(connection)
-        controller = Controller(ConsoleInput(), database, RegistrationValidator(), SimulatedServer())
-        return controller.run()
+    connection = sqlite3.connect("registration.sqlite3")
+    database = RegistrationDatabase(connection)
+    controller = Controller(ConsoleInput(), database, RegistrationValidator(), SimulatedServer())
+
+    result = controller.run()
+    connection.close()
+    return result
 
 
 if __name__ == "__main__":
