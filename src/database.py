@@ -2,6 +2,7 @@ import sqlite3
 
 
 class RegistrationDatabase:
+    
     def __init__(self, connection: sqlite3.Connection):
         self.connection = connection
         self.connection.execute("""

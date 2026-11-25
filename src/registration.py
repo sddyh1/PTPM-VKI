@@ -1,6 +1,5 @@
 import re
 
-
 FORBIDDEN_LOGINS = {"admin", "root", "administrator", "test", "user", "guest", "support"}
 PHONE = re.compile(r"\+\d-\d{3}-\d{3}-\d{4}")
 EMAIL = re.compile(r"[^@\s]+@[^@\s]+\.[a-zA-Z]{2,}")

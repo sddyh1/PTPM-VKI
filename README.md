@@ -21,7 +21,7 @@ python main.py
 ## Тесты
 
 ```powershell
-python -m unittest -v
+python -m unittest discover -s tests -v
 ```
 
 Интеграционные тесты проверяют совместную работу контроллера, валидатора и SQLite. Тесты проверяют новую регистрацию, получение готового результата из базы, изменение подтверждения, ошибки ввода и удаление записи. Ввод и отправку подменяют заглушками из `unittest.mock`. Для тестов SQLite работает в памяти.
@@ -29,6 +29,6 @@ python -m unittest -v
 Для измерения покрытия можно установить `coverage` и выполнить:
 
 ```powershell
-python -m coverage run --branch --source=. -m unittest
+python -m coverage run --branch --source=. -m unittest discover -s tests
 python -m coverage report --omit="tests/*" -m
 ```
