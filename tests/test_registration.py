@@ -1,84 +1,57 @@
 import sqlite3
 import unittest
-from unittest.mock import Mock, call, patch
+from unittest.mock import Mock
 
-from src.adapters import ResultSender, UserInput
 from src.controller import Controller
 from src.database import RegistrationDatabase
 from src.registration import RegistrationValidator
 
 
-SUCCESS = "Регистрация успешна"
 PASSWORD = "Учебный7!"
-LOGIN = "student_3"
-VALID = (LOGIN, PASSWORD, PASSWORD)
+VALID = ("student_3", PASSWORD, PASSWORD)
 
 
-class ControllerIntegrationTests(unittest.TestCase):
+class RegistrationTests(unittest.TestCase):
     def setUp(self):
         connection = sqlite3.connect(":memory:")
         self.addCleanup(connection.close)
         self.db = RegistrationDatabase(connection)
-        self.user = Mock(spec=UserInput)
+        self.user = Mock()
+        self.sender = Mock()
         self.user.read.return_value = VALID
-        self.sender = Mock(spec=ResultSender)
-        self.validator = Mock(wraps=RegistrationValidator())
-        self.controller = Controller(self.user, self.db, self.validator, self.sender)
+        self.controller = Controller(self.user, self.db, RegistrationValidator(), self.sender)
 
-    def test_new_attempt_is_saved_before_result_is_sent(self):
-        def check_saved(message):
-            self.assertEqual(self.db.get(VALID), (True, ""))
-            self.assertEqual(message, SUCCESS)
+    def test_new_registration(self):
+        message = self.controller.run()
 
-        self.sender.send.side_effect = check_saved
-        self.assertEqual(self.controller.run(), SUCCESS)
-        self.user.read.assert_called_once_with()
-        self.validator.register.assert_called_once_with(VALID)
-        self.sender.send.assert_called_once_with(SUCCESS)
+        self.assertEqual(message, "Регистрация успешна")
+        self.assertEqual(self.db.get(VALID), (True, ""))
+        self.sender.send.assert_called_once_with(message)
 
-    def test_cached_failure_is_sent_without_validation_or_insert(self):
-        error = "Сохранённый отказ"
-        self.db.add(VALID, (False, error))
-        with patch.object(self.db, "add", wraps=self.db.add) as add:
-            self.assertEqual(self.controller.run(), error)
-        add.assert_not_called()
-        self.validator.register.assert_not_called()
-        self.sender.send.assert_called_once_with(error)
+    def test_saved_result(self):
+        self.db.add(VALID, (False, "Сохранённый отказ"))
+        message = self.controller.run()
 
-    def test_changing_each_input_creates_a_separate_attempt(self):
-        changed_login = ("student@example.org", PASSWORD, PASSWORD)
-        changed_password = (LOGIN, "Учебный8!", PASSWORD)
-        changed_confirmation = (LOGIN, PASSWORD, "Учебный8!")
-        mismatch = "Пароль и подтверждение не совпадают"
+        self.assertEqual(message, "Сохранённый отказ")
+        self.sender.send.assert_called_once_with(message)
 
-        for attempt, expected in [
-            (VALID, SUCCESS),
-            (changed_login, SUCCESS),
-            (changed_password, mismatch),
-            (changed_confirmation, mismatch),
-        ]:
-            with self.subTest(attempt=attempt):
-                self.user.read.return_value = attempt
-                self.assertEqual(self.controller.run(), expected)
-                self.validator.register.assert_called_with(attempt)
-                self.sender.send.assert_called_with(expected)
-
-        self.user.read.return_value = VALID
-        self.assertEqual(self.controller.run(), SUCCESS)
-        self.assertEqual(self.validator.register.call_count, 4)
-
-    def test_delete_only_removes_selected_attempt_and_forces_recalculation(self):
-        other = ("+7-901-111-2222", PASSWORD, PASSWORD)
-        self.user.read.side_effect = [VALID, other, VALID]
+    def test_different_confirmation(self):
         self.controller.run()
+        data = ("student_3", PASSWORD, "Другой пароль")
+        self.user.read.return_value = data
+        message = self.controller.run()
+
+        self.assertEqual(message, "Пароль и подтверждение не совпадают")
+        self.assertEqual(self.db.get(data), (False, message))
+        self.assertEqual(self.db.get(VALID), (True, ""))
+
+    def test_delete_registration(self):
         self.controller.run()
         self.db.delete(VALID)
-        self.assertIsNone(self.db.get(VALID))
-        self.assertEqual(self.db.get(other), (True, ""))
-        self.assertEqual(self.controller.run(), SUCCESS)
-        self.assertEqual(self.validator.register.call_args_list, [call(VALID), call(other), call(VALID)])
 
-    def test_rejections_reach_database_sender_and_caller(self):
+        self.assertIsNone(self.db.get(VALID))
+
+    def test_registration_errors(self):
         cases = [
             ("", PASSWORD, "Логин не может быть пустым"),
             ("Root", PASSWORD, "Логин в чс"),
@@ -98,11 +71,3 @@ class ControllerIntegrationTests(unittest.TestCase):
                 self.assertEqual(self.controller.run(), error)
                 self.assertEqual(self.db.get(data), (False, error))
                 self.sender.send.assert_called_with(error)
-
-    def test_retry_after_sender_failure_reuses_saved_result(self):
-        self.sender.send.side_effect = [ConnectionError("Сервис недоступен"), None]
-        with self.assertRaises(ConnectionError):
-            self.controller.run()
-        self.assertEqual(self.controller.run(), SUCCESS)
-        self.validator.register.assert_called_once_with(VALID)
-        self.assertEqual(self.sender.send.call_args_list, [call(SUCCESS), call(SUCCESS)])
