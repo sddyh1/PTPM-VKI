@@ -1,7 +1,5 @@
 import sqlite3
 
-from src.registration import Credentials
-
 
 class RegistrationDatabase:
     def __init__(self, connection: sqlite3.Connection):
@@ -17,7 +15,7 @@ class RegistrationDatabase:
             )
         """)
 
-    def get(self, data: Credentials):
+    def get(self, data):
         row = self.connection.execute("""
             SELECT success, error FROM registrations
             WHERE login = ? AND password = ? AND confirmation = ?
@@ -27,7 +25,7 @@ class RegistrationDatabase:
         success, error = row
         return bool(success), error
 
-    def add(self, data: Credentials, result) -> None:
+    def add(self, data, result) -> None:
         with self.connection:
             self.connection.execute("""
                 INSERT INTO registrations (login, password, confirmation, success, error)
@@ -35,7 +33,7 @@ class RegistrationDatabase:
                 ON CONFLICT (login, password, confirmation) DO NOTHING
             """, data + result)
 
-    def delete(self, data: Credentials) -> None:
+    def delete(self, data) -> None:
         with self.connection:
             self.connection.execute("""
                 DELETE FROM registrations

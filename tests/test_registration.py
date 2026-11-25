@@ -5,12 +5,13 @@ from unittest.mock import Mock, call, patch
 from src.adapters import ResultSender, UserInput
 from src.controller import Controller
 from src.database import RegistrationDatabase
-from src.registration import Credentials, RegistrationValidator
+from src.registration import RegistrationValidator
 
 
 SUCCESS = "Регистрация успешна"
 PASSWORD = "Учебный7!"
-VALID = Credentials("student_3", PASSWORD, PASSWORD)
+LOGIN = "student_3"
+VALID = (LOGIN, PASSWORD, PASSWORD)
 
 
 class ControllerIntegrationTests(unittest.TestCase):
@@ -45,9 +46,9 @@ class ControllerIntegrationTests(unittest.TestCase):
         self.sender.send.assert_called_once_with(error)
 
     def test_changing_each_input_creates_a_separate_attempt(self):
-        changed_login = Credentials("student@example.org", PASSWORD, PASSWORD)
-        changed_password = Credentials(VALID.login, "Учебный8!", PASSWORD)
-        changed_confirmation = Credentials(VALID.login, PASSWORD, "Учебный8!")
+        changed_login = ("student@example.org", PASSWORD, PASSWORD)
+        changed_password = (LOGIN, "Учебный8!", PASSWORD)
+        changed_confirmation = (LOGIN, PASSWORD, "Учебный8!")
         mismatch = "Пароль и подтверждение не совпадают"
 
         for attempt, expected in [
@@ -67,7 +68,7 @@ class ControllerIntegrationTests(unittest.TestCase):
         self.assertEqual(self.validator.register.call_count, 4)
 
     def test_delete_only_removes_selected_attempt_and_forces_recalculation(self):
-        other = Credentials("+7-901-111-2222", PASSWORD, PASSWORD)
+        other = ("+7-901-111-2222", PASSWORD, PASSWORD)
         self.user.read.side_effect = [VALID, other, VALID]
         self.controller.run()
         self.controller.run()
@@ -92,7 +93,7 @@ class ControllerIntegrationTests(unittest.TestCase):
         ]
         for login, password, error in cases:
             with self.subTest(login=login, error=error):
-                data = Credentials(login, password, password)
+                data = (login, password, password)
                 self.user.read.return_value = data
                 self.assertEqual(self.controller.run(), error)
                 self.assertEqual(self.db.get(data), (False, error))

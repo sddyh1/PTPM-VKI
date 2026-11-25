@@ -1,11 +1,4 @@
 import re
-from typing import NamedTuple
-
-
-class Credentials(NamedTuple):
-    login: str
-    password: str
-    confirmation: str
 
 
 FORBIDDEN_LOGINS = {"admin", "root", "administrator", "test", "user", "guest", "support"}
@@ -49,12 +42,13 @@ def password_error(password, confirmation):
 
 
 class RegistrationValidator:
-    def register(self, data: Credentials):
-        error = login_error(data.login)
+    def register(self, data):
+        login, password, confirmation = data
+        error = login_error(login)
         if error != "":
             return False, error
 
-        error = password_error(data.password, data.confirmation)
+        error = password_error(password, confirmation)
         if error != "":
             return False, error
 

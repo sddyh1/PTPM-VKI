@@ -1,20 +1,18 @@
 from abc import ABC, abstractmethod
 
-from src.registration import Credentials
-
 
 class UserInput(ABC):
     @abstractmethod
-    def read(self) -> Credentials:
+    def read(self):
         ...
 
 
 class ConsoleInput(UserInput):
-    def read(self) -> Credentials:
+    def read(self):
         login = input("Логин: ")
         password = input("Пароль: ")
         confirmation = input("Подтверждение: ")
-        return Credentials(login, password, confirmation)
+        return login, password, confirmation
 
 
 class ResultSender(ABC):
