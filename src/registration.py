@@ -8,11 +8,6 @@ class Credentials(NamedTuple):
     confirmation: str
 
 
-class Result(NamedTuple):
-    success: bool
-    error: str
-
-
 FORBIDDEN_LOGINS = {"admin", "root", "administrator", "test", "user", "guest", "support"}
 PHONE = re.compile(r"\+\d-\d{3}-\d{3}-\d{4}")
 EMAIL = re.compile(r"[^@\s]+@[^@\s]+\.[a-zA-Z]{2,}")
@@ -54,8 +49,13 @@ def password_error(password, confirmation):
 
 
 class RegistrationValidator:
-    def register(self, data: Credentials) -> Result:
+    def register(self, data: Credentials) -> tuple[bool, str]:
         error = login_error(data.login)
-        if not error:
-            error = password_error(data.password, data.confirmation)
-        return Result(success=not error, error=error)
+        if error != "":
+            return False, error
+
+        error = password_error(data.password, data.confirmation)
+        if error != "":
+            return False, error
+
+        return True, ""

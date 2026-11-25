@@ -13,6 +13,10 @@ class Controller:
             result = self.validator.register(data)
             self.database.add(data, result)
 
-        message = "Регистрация успешна" if result.success else result.error
+        success, error = result
+        if success:
+            message = "Регистрация успешна"
+        else:
+            message = error
         self.sender.send(message)
         return message

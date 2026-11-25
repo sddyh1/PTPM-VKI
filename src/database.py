@@ -1,6 +1,6 @@
 import sqlite3
 
-from src.registration import Credentials, Result
+from src.registration import Credentials
 
 
 class RegistrationDatabase:
@@ -17,7 +17,7 @@ class RegistrationDatabase:
             )
         """)
 
-    def get(self, data: Credentials) -> Result | None:
+    def get(self, data: Credentials) -> tuple[bool, str] | None:
         row = self.connection.execute("""
             SELECT success, error FROM registrations
             WHERE login = ? AND password = ? AND confirmation = ?
@@ -25,9 +25,9 @@ class RegistrationDatabase:
         if row is None:
             return None
         success, error = row
-        return Result(bool(success), error)
+        return bool(success), error
 
-    def add(self, data: Credentials, result: Result) -> None:
+    def add(self, data: Credentials, result: tuple[bool, str]) -> None:
         with self.connection:
             self.connection.execute("""
                 INSERT INTO registrations (login, password, confirmation, success, error)

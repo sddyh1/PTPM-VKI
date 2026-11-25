@@ -8,7 +8,7 @@ from unittest.mock import patch
 
 from src.adapters import ConsoleInput, SimulatedServer
 from src.database import RegistrationDatabase
-from src.registration import Credentials, Result
+from src.registration import Credentials
 
 
 class ConsoleTests(unittest.TestCase):
@@ -43,4 +43,4 @@ class ConsoleTests(unittest.TestCase):
 
             output.assert_called_once_with("[Имитация сервера] Регистрация успешна")
             with closing(sqlite3.connect(path)) as saved:
-                self.assertEqual(RegistrationDatabase(saved).get(data), Result(True, ""))
+                self.assertEqual(RegistrationDatabase(saved).get(data), (True, ""))

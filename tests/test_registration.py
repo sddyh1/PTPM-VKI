@@ -5,7 +5,7 @@ from unittest.mock import Mock, call, patch
 from src.adapters import ResultSender, UserInput
 from src.controller import Controller
 from src.database import RegistrationDatabase
-from src.registration import Credentials, RegistrationValidator, Result
+from src.registration import Credentials, RegistrationValidator
 
 
 SUCCESS = "Регистрация успешна"
@@ -26,7 +26,7 @@ class ControllerIntegrationTests(unittest.TestCase):
 
     def test_new_attempt_is_saved_before_result_is_sent(self):
         def check_saved(message):
-            self.assertEqual(self.db.get(VALID), Result(True, ""))
+            self.assertEqual(self.db.get(VALID), (True, ""))
             self.assertEqual(message, SUCCESS)
 
         self.sender.send.side_effect = check_saved
@@ -37,7 +37,7 @@ class ControllerIntegrationTests(unittest.TestCase):
 
     def test_cached_failure_is_sent_without_validation_or_insert(self):
         error = "Сохранённый отказ"
-        self.db.add(VALID, Result(False, error))
+        self.db.add(VALID, (False, error))
         with patch.object(self.db, "add", wraps=self.db.add) as add:
             self.assertEqual(self.controller.run(), error)
         add.assert_not_called()
@@ -73,7 +73,7 @@ class ControllerIntegrationTests(unittest.TestCase):
         self.controller.run()
         self.db.delete(VALID)
         self.assertIsNone(self.db.get(VALID))
-        self.assertEqual(self.db.get(other), Result(True, ""))
+        self.assertEqual(self.db.get(other), (True, ""))
         self.assertEqual(self.controller.run(), SUCCESS)
         self.assertEqual(self.validator.register.call_args_list, [call(VALID), call(other), call(VALID)])
 
@@ -95,7 +95,7 @@ class ControllerIntegrationTests(unittest.TestCase):
                 data = Credentials(login, password, password)
                 self.user.read.return_value = data
                 self.assertEqual(self.controller.run(), error)
-                self.assertEqual(self.db.get(data), Result(False, error))
+                self.assertEqual(self.db.get(data), (False, error))
                 self.sender.send.assert_called_with(error)
 
     def test_retry_after_sender_failure_reuses_saved_result(self):
