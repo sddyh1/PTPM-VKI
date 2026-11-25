@@ -1,33 +1,34 @@
 import runpy
-import sqlite3
 import unittest
+from sqlite3 import connect
 from unittest.mock import patch
 
 from src.adapters import ConsoleInput, SimulatedServer
 
 
 class ConsoleTests(unittest.TestCase):
-    def test_console_input(self):
-        with patch("builtins.input", side_effect=["student", "пароль", "повтор"]):
-            data = ConsoleInput().read()
+    @patch("builtins.input")
+    def test_console_input(self, keyboard):
+        keyboard.side_effect = ["student", "пароль", "повтор"]
+        data = ConsoleInput().read()
         self.assertEqual(data, ("student", "пароль", "повтор"))
 
-    def test_server_message(self):
-        with patch("builtins.print") as output:
-            SimulatedServer().send("Готово")
+    @patch("builtins.print")
+    def test_server_message(self, output):
+        SimulatedServer().send("Готово")
         output.assert_called_once_with("[Имитация сервера] Готово")
 
-    def test_import(self):
-        with patch("sqlite3.connect") as connect:
-            runpy.run_module("main")
-        connect.assert_not_called()
+    @patch("sqlite3.connect")
+    def test_import(self, open_database):
+        runpy.run_module("main")
+        open_database.assert_not_called()
 
-    def test_program_start(self):
-        connection = sqlite3.connect(":memory:")
-        with (
-            patch("sqlite3.connect", return_value=connection),
-            patch("builtins.input", side_effect=["student@example.org", "Учебный7!", "Учебный7!"]),
-            patch("builtins.print") as output,
-        ):
-            runpy.run_module("main", run_name="__main__")
+    @patch("sqlite3.connect")
+    @patch("builtins.input")
+    @patch("builtins.print")
+    def test_program_start(self, output, keyboard, open_database):
+        keyboard.side_effect = ["student@example.org", "Учебный7!", "Учебный7!"]
+        open_database.return_value = connect(":memory:")
+        self.addCleanup(open_database.return_value.close)
+        runpy.run_module("main", run_name="__main__")
         output.assert_called_once_with("[Имитация сервера] Регистрация успешна")

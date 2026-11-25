@@ -65,9 +65,8 @@ class RegistrationTests(unittest.TestCase):
             ("student_3", "Учебный77", "Нужен спецсимвол"),
         ]
         for login, password, error in cases:
-            with self.subTest(login=login, error=error):
-                data = (login, password, password)
-                self.user.read.return_value = data
-                self.assertEqual(self.controller.run(), error)
-                self.assertEqual(self.db.get(data), (False, error))
-                self.sender.send.assert_called_with(error)
+            data = (login, password, password)
+            self.user.read.return_value = data
+            self.assertEqual(self.controller.run(), error)
+            self.assertEqual(self.db.get(data), (False, error))
+            self.sender.send.assert_called_with(error)
