@@ -1,10 +1,10 @@
 import sqlite3
 from contextlib import closing
 
-from adapters import ConsoleInput, SimulatedServer
-from controller import Controller
-from database import RegistrationDatabase
-from registration import RegistrationValidator
+from src.adapters import ConsoleInput, SimulatedServer
+from src.controller import Controller
+from src.database import RegistrationDatabase
+from src.registration import RegistrationValidator
 
 
 def main():

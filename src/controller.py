@@ -1,6 +1,6 @@
-from adapters import ResultSender, UserInput
-from database import RegistrationDatabase
-from registration import RegistrationValidator
+from src.adapters import ResultSender, UserInput
+from src.database import RegistrationDatabase
+from src.registration import RegistrationValidator
 
 
 class Controller:

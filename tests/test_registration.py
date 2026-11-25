@@ -8,10 +8,10 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import Mock, call, create_autospec, patch
 
-from adapters import ConsoleInput, ResultSender, SimulatedServer, UserInput
-from controller import Controller
-from database import RegistrationDatabase
-from registration import Credentials, RegistrationValidator, Result
+from src.adapters import ConsoleInput, ResultSender, SimulatedServer, UserInput
+from src.controller import Controller
+from src.database import RegistrationDatabase
+from src.registration import Credentials, RegistrationValidator, Result
 
 
 SUCCESS = "Регистрация успешна"
@@ -110,7 +110,7 @@ class ControllerIntegrationTests(unittest.TestCase):
 class AdapterTests(unittest.TestCase):
     def test_console_reads_confirmation_separately(self):
         with patch("builtins.input", return_value="student_3"), \
-             patch("adapters.getpass", side_effect=["первый", "второй"]):
+             patch("src.adapters.getpass", side_effect=["первый", "второй"]):
             self.assertEqual(ConsoleInput().read(), Credentials("student_3", "первый", "второй"))
 
     def test_simulated_server_prints_only_result(self):
@@ -121,13 +121,13 @@ class AdapterTests(unittest.TestCase):
 
 class ApplicationIntegrationTests(unittest.TestCase):
     def test_console_entry_point_persists_result_after_exit(self):
-        script = Path(__file__).with_name("main.py").resolve()
+        script = Path(__file__).resolve().parents[1] / "main.py"
         with TemporaryDirectory() as folder:
             previous_dir = Path.cwd()
             try:
                 os.chdir(folder)
                 with patch("builtins.input", return_value=VALID.login), \
-                     patch("adapters.getpass", side_effect=[PASSWORD, PASSWORD]), \
+                     patch("src.adapters.getpass", side_effect=[PASSWORD, PASSWORD]), \
                      redirect_stdout(io.StringIO()) as output:
                     runpy.run_path(str(script), run_name="__main__")
                 self.assertEqual(output.getvalue().strip(), "[Имитация сервера] " + SUCCESS)
@@ -137,7 +137,7 @@ class ApplicationIntegrationTests(unittest.TestCase):
                 os.chdir(previous_dir)
 
     def test_import_does_not_start_registration(self):
-        script = Path(__file__).with_name("main.py")
+        script = Path(__file__).resolve().parents[1] / "main.py"
         with patch("sqlite3.connect") as connect, patch("builtins.input") as read:
             runpy.run_path(str(script), run_name="main")
         connect.assert_not_called()

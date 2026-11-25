@@ -1,6 +1,6 @@
 import sqlite3
 
-from registration import Credentials, Result
+from src.registration import Credentials, Result
 
 
 class RegistrationDatabase:

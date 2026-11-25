@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from getpass import getpass
 
-from registration import Credentials
+from src.registration import Credentials
 
 
 class UserInput(ABC):
