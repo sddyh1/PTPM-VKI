@@ -24,7 +24,8 @@ class RegistrationDatabase:
         """, data).fetchone()
         if row is None:
             return None
-        return Result(bool(row[0]), row[1])
+        success, error = row
+        return Result(bool(success), error)
 
     def add(self, data: Credentials, result: Result) -> None:
         with self.connection:
@@ -32,7 +33,7 @@ class RegistrationDatabase:
                 INSERT INTO registrations (login, password, confirmation, success, error)
                 VALUES (?, ?, ?, ?, ?)
                 ON CONFLICT (login, password, confirmation) DO NOTHING
-            """, (*data, *result))
+            """, data + result)
 
     def delete(self, data: Credentials) -> None:
         with self.connection:

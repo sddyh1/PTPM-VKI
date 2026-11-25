@@ -9,8 +9,8 @@ from src.registration import RegistrationValidator
 
 def main():
     with closing(sqlite3.connect("registration.sqlite3")) as connection:
-        controller = Controller(ConsoleInput(), RegistrationDatabase(connection),
-                                RegistrationValidator(), SimulatedServer())
+        database = RegistrationDatabase(connection)
+        controller = Controller(ConsoleInput(), database, RegistrationValidator(), SimulatedServer())
         return controller.run()
 
 

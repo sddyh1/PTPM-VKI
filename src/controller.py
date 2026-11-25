@@ -1,11 +1,5 @@
-from src.adapters import ResultSender, UserInput
-from src.database import RegistrationDatabase
-from src.registration import RegistrationValidator
-
-
 class Controller:
-    def __init__(self, user_input: UserInput, database: RegistrationDatabase,
-                 validator: RegistrationValidator, sender: ResultSender):
+    def __init__(self, user_input, database, validator, sender):
         self.user_input = user_input
         self.database = database
         self.validator = validator
@@ -14,6 +8,7 @@ class Controller:
     def run(self) -> str:
         data = self.user_input.read()
         result = self.database.get(data)
+
         if result is None:
             result = self.validator.register(data)
             self.database.add(data, result)
